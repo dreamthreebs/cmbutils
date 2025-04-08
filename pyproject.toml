@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cmbutils"
+version = "0.1.0"
+description = "A collection of CMB analysis utilities"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "dreamthreebs", email = "1124378176@qq.com" },
+]
+
+dependencies = [
+    "numpy>=1.20",
+    "healpy>1.16"
+    # "scipy>=1.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
