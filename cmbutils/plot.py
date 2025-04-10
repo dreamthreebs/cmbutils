@@ -1,10 +1,17 @@
 import healpy as hp
-import numpy as np
 import matplotlib.pyplot as plt
 
 
 def plot_hp(
-    m, proj_type, pol=False, title=None, rot=None, xsize=None, min=None, max=None
+    m,
+    proj_type,
+    pol=True,
+    title=None,
+    rot=None,
+    xsize=None,
+    min=None,
+    max=None,
+    norm="hist",
 ):
     """
     Plot a HEALPix map using mollview, orthview, or gnomview.
@@ -22,9 +29,11 @@ def plot_hp(
     rot : tuple/list, optional
         Rotation for the view (lon, lat[, psi]).
     xsize : int, optional
-        Only used in gnomview; defines the size in pixels.
+        Size in pixels (default depends on projection type).
     min, max : float, optional
         Color scale limits.
+    norm : {'hist', 'linear', 'log'}, default='hist'
+        Color normalization method.
     """
     if proj_type not in {"moll", "orth", "gnom"}:
         raise ValueError(f"Unsupported projection type: {proj_type}")
@@ -33,11 +42,20 @@ def plot_hp(
         proj_type
     ]
 
+    if xsize is None:
+        default_xsize = {"moll": 800, "orth": 800, "gnom": 400}
+        xsize = default_xsize[proj_type]
+
+    def _plot_single_map(data, map_title):
+        plot_func(
+            data, title=map_title, rot=rot, xsize=xsize, min=min, max=max, norm=norm
+        )
+
     if pol and isinstance(m, (tuple, list)) and len(m) == 3:
         titles = ["T", "Q", "U"]
         for i in range(3):
-            plot_func(m[i], title=titles[i], rot=rot, xsize=xsize, min=min, max=max)
+            _plot_single_map(m[i], titles[i])
     else:
-        plot_func(m, title=title, rot=rot, xsize=xsize, min=min, max=max)
+        _plot_single_map(m, title)
 
     plt.show()
