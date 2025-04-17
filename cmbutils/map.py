@@ -1,3 +1,4 @@
+import healpy as hp
 import numpy as np
 
 
@@ -13,26 +14,27 @@ def adjust_lat(lat):
     return lat
 
 
-def generate_bins(l_min_start=30, delta_l_min=30, l_max=1500, fold=0.3):
-    bins_edges = []
-    l_min = l_min_start  # starting l_min
+def galactic_latitude_mask(nside: int, lat_max_deg: float = 20.0) -> np.ndarray:
+    """
+    Create a HEALPix mask where pixels with |b| > lat_max_deg are masked (set to 0).
 
-    while l_min < l_max:
-        delta_l = max(delta_l_min, int(fold * l_min))
-        l_next = l_min + delta_l
-        bins_edges.append(l_min)
-        l_min = l_next
+    Parameters:
+        nside (int): HEALPix resolution parameter.
+        lat_max_deg (float): Latitude cutoff in degrees (default is 20).
 
-    # Adding l_max to ensure the last bin goes up to l_max
-    bins_edges.append(l_max)
-    return bins_edges[:-1], bins_edges[1:]
+    Returns:
+        mask (np.ndarray): Binary mask (1 = keep, 0 = mask).
+    """
+    npix = hp.nside2npix(nside)
 
+    # Get theta, phi for all pixels in equatorial coordinates
+    theta, phi = hp.pix2ang(nside, np.arange(npix))
 
-def dl2cl(D_ell):
-    ell = np.arange(len(D_ell))
-    mask = ell > 1
-    C_ell = np.zeros_like(D_ell, dtype=np.float64)
-    C_ell[mask] = (2 * np.pi * D_ell[mask]) / (ell[mask] * (ell[mask] + 1))
-    C_ell[~mask] = 0
-    return C_ell
+    # Convert theta to Galactic latitude b
+    vec = hp.ang2vec(theta, phi)
+    gal_lon, gal_lat = hp.vec2ang(vec, lonlat=True)
 
+    # Apply mask: keep only pixels within |b| <= lat_max_deg
+    mask = (np.abs(gal_lat) > lat_max_deg).astype(np.int8)
+
+    return mask

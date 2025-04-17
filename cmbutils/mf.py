@@ -80,6 +80,33 @@ class MatchedFilter:
         plt.legend()
         plt.show()
 
+    def test_run_mf(self, m_obs, m_tot):
+        file_wl = Path(f"./mf_data/normalized_wl_{self.name}.npy")
+        if file_wl.exists():
+            self.wl = np.load(file_wl)
+        if not hasattr(self, "wl"):
+            self.calc_wl(normalize=True)
+
+        obs_out = hp.smoothing(m_obs, beam_window=self.wl, pol=False)
+        tot_out = hp.smoothing(m_tot, beam_window=self.wl, pol=False)
+
+        sigma = np.std(tot_out)
+        snr = obs_out / sigma
+
+        print(f"{sigma=}")
+
+        # ps = np.load('./data/ps_map.npy')
+        # hp.gnomview(ps, title='ps')
+        # hp.gnomview(m_obs, title='input observation')
+        # hp.gnomview(m_tot, title='input total')
+        # hp.gnomview(obs_out, title='filtered observation')
+        # hp.gnomview(tot_out, title='filtered total')
+        # hp.gnomview(snr, title='snr')
+        # snr[snr<5] = 0
+        # hp.gnomview(snr, title='snr > 5')
+        # plt.show()
+        return obs_out, tot_out, snr, sigma, self.wl
+
     def run_mf(self, m_obs, m_tot):
         file_wl = Path(f"./mf_data/normalized_wl_{self.name}.npy")
         if file_wl.exists():
