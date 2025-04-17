@@ -53,11 +53,13 @@ def calc_dl_from_pol_map(
     )
     w22p = nmt.NmtWorkspace.from_fields(f2p, f2p, bin_dl)
     # dl = nmt.workspaces.compute_full_master(pol_field, pol_field, b=bin_dl)
-    dl = w22p.decouple_cell(nmt.compute_coupled_cell(f2p, f2p))[3]
-    return dl
+    dl = w22p.decouple_cell(nmt.compute_coupled_cell(f2p, f2p))
+    return dl[0], dl[3]
 
 
-def calc_power(m, apo_mask, lmax, masked_on_input=False, bl=None, bin_dl=None):
+def calc_power(
+    m, apo_mask, lmax, masked_on_input=False, bl=None, bin_dl=None, purify_b=True
+):
     # check scalar or tqu maps
     if m.ndim == 1:
         pol = False
@@ -82,4 +84,14 @@ def calc_power(m, apo_mask, lmax, masked_on_input=False, bl=None, bin_dl=None):
         )
         return ell_arr, dl_sca
     else:
-        pass
+        dl_pol = calc_dl_from_pol_map(
+            m_q=m[1],
+            m_u=m[2],
+            bl=bl,
+            apo_mask=apo_mask,
+            bin_dl=bin_dl,
+            masked_on_input=masked_on_input,
+            purify_b=purify_b,
+            lmax=lmax,
+        )
+        return ell_arr, dl_pol
