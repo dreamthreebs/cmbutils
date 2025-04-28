@@ -9,7 +9,7 @@ from cmbutils.map import galactic_latitude_mask
 
 
 def test_calc_power_sca(plot_flag=False):
-    nside = 512
+    nside = 256
     lmax = 3 * nside - 1
     mask = galactic_latitude_mask(nside=nside)
     apo_mask = nmt.mask_apodization(mask, aposize=6, apotype="C1")
@@ -53,7 +53,7 @@ def test_calc_power_sca(plot_flag=False):
 
 
 def test_calc_power_pol(plot_flag=False):
-    nside = 512
+    nside = 256
     lmax = 3 * nside - 1
     mask = galactic_latitude_mask(nside=nside)
     apo_mask = nmt.mask_apodization(mask, aposize=6, apotype="C1")
