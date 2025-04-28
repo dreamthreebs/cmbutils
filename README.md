@@ -11,8 +11,7 @@ pip install -e .
 ## Tests
 
 ```bash
-pip install -e .
+pip install -e .[dev]
 cd tests
 pytest -s .
 ```
-
