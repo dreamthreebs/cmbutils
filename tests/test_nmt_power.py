@@ -4,7 +4,7 @@ import pymaster as nmt
 import matplotlib.pyplot as plt
 
 
-from cmbutils.map2power import calc_power
+from cmbutils.nmt_power import calc_power
 from cmbutils.map import galactic_latitude_mask
 
 
