@@ -25,7 +25,7 @@ jobs:
 
       - name: Install conda packages
         run: |
-          conda install -y -c conda-forge pymaster numpy healpy
+          conda install -y -c conda-forge namaster
 
       - name: Install package + dev dependencies
         run: |
