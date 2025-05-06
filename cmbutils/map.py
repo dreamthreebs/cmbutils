@@ -38,3 +38,12 @@ def galactic_latitude_mask(nside: int, lat_max_deg: float = 20.0) -> np.ndarray:
     mask = (np.abs(gal_lat) > lat_max_deg).astype(np.int8)
 
     return mask
+
+
+def calc_fsky(mask):
+    """
+    Return the effective sky fraction f_sky = mean(mask**2).
+
+    Works for binary or apodized HEALPix masks.
+    """
+    return np.sum(mask**2) / np.size(mask)
