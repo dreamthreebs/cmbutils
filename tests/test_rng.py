@@ -18,5 +18,6 @@ def test_generated_seeds():
     num_seeds = 2000
 
     seeds = generate_seeds(num_seeds)
+    print(f"{seeds=}")
     assert check_unique_seeds(seeds), "Duplicate seeds found!"
     print("All seeds are unique.")
