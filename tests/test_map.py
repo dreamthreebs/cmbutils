@@ -2,7 +2,6 @@ import numpy as np
 import healpy as hp
 import matplotlib.pyplot as plt
 import pymaster as nmt
-import pytest
 import time
 
 from cmbutils.map import galactic_latitude_mask, calc_fsky

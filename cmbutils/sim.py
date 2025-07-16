@@ -8,7 +8,7 @@ def gen_noise(nstd, nside, seed=None):
 
     Parameters
     ----------
-    nstd : float
+    nstd : float or np.ndarray
         Standard deviation of the Gaussian noise in μK per pixel.
     nside : int
         HEALPix Nside resolution parameter.
@@ -27,17 +27,17 @@ def gen_noise(nstd, nside, seed=None):
     return nstd * rng.standard_normal(size=(3, npix))
 
 
-def genCmb(nside, clFile, beamFwhmArcmin=0.0, seed=0, lmax=None):
+def gen_cmb(nside, cls, beamFwhmArcmin=0.0, seed=0, lmax=None):
     """
-    Generate a CMB temperature anisotropy map from a theoretical power spectrum.
+    Generate a CMB TQU map from a theoretical power spectrum.
 
     Parameters
     ----------
     nside : int
         HEALPix Nside resolution parameter.
-    clFile : str
-        Path to a .npy file containing the CMB power spectra in μK².
-        The array should be 2D with rows in the order [TT, EE, BB, TE].
+    cls : str
+        The CMB power spectra in μK².
+        The array should be 2D with rows in the order [TT, EE, BB, TE], which consistent with 'new' parameter in synfast.
     beamFwhmArcmin : float, optional
         Full-width at half-maximum of the Gaussian beam in arcminutes
         (default: 0.0 for no smoothing).
@@ -50,15 +50,17 @@ def genCmb(nside, clFile, beamFwhmArcmin=0.0, seed=0, lmax=None):
     Returns
     -------
     cmb_map : ndarray
-        Simulated CMB temperature anisotropy map in μK as a 1D array
-        of length `npix = 12 * nside**2`.
+        Simulated CMB temperature anisotropy map in μK as a 2D array with dimension (3, npix)
     """
     if lmax is None:
         lmax = 3 * nside - 1
 
     np.random.seed(seed)
-    cl = np.load(clFile)
 
     return hp.synfast(
-        cls=cl, nside=nside, fwhm=np.deg2rad(beamFwhmArcmin / 60.0), lmax=lmax, new=True
+        cls=cls,
+        nside=nside,
+        fwhm=np.deg2rad(beamFwhmArcmin / 60.0),
+        lmax=lmax,
+        new=True,
     )
