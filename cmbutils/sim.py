@@ -68,6 +68,32 @@ def gen_cmb(nside, cls, beamFwhmArcmin=0.0, seed=0, lmax=None):
 
 
 def gen_test_ps(nside, lon, lat, flux_i=1000, flux_q=1000, flux_u=1000, beam=9):
+    """
+    Generate a smoothed test point source map in I, Q, U Stokes components.
+
+    Parameters
+    ----------
+    nside : int
+        HEALPix NSIDE resolution parameter.
+    lon : float
+        Longitude (in degrees) of the point source in Galactic or Equatorial coordinates, depending on map convention.
+    lat : float
+        Latitude (in degrees) of the point source in the same coordinate system as `lon`.
+    flux_i : float, optional
+        Flux value (arbitrary units) for the I (intensity) component. Default is 1000.
+    flux_q : float, optional
+        Flux value for the Q polarization component. Default is 1000.
+    flux_u : float, optional
+        Flux value for the U polarization component. Default is 1000.
+    beam : float, optional
+        Full width at half maximum (FWHM) of the Gaussian smoothing beam in arcminutes. Default is 9 arcmin.
+
+    Returns
+    -------
+    sm : ndarray
+        A (3, N_pix) NumPy array containing the smoothed I, Q, U maps with a single point source inserted
+        at the specified location and convolved with a symmetric Gaussian beam.
+    """
     pix_idx = hp.ang2pix(nside=nside, theta=lon, phi=lat, lonlat=True)
     m = np.zeros(shape=(3, hp.nside2npix(nside=nside)))
 
