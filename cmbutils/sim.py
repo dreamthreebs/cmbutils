@@ -1,3 +1,4 @@
+from healpy.sphtfunc import smoothing
 import numpy as np
 import healpy as hp
 
@@ -64,3 +65,14 @@ def gen_cmb(nside, cls, beamFwhmArcmin=0.0, seed=0, lmax=None):
         lmax=lmax,
         new=True,
     )
+
+
+def gen_test_ps(nside, lon, lat, flux_i=1000, flux_q=1000, flux_u=1000, beam=9):
+    pix_idx = hp.ang2pix(nside=nside, theta=lon, phi=lat, lonlat=True)
+    m = np.zeros(shape=(3, hp.nside2npix(nside=nside)))
+
+    m[0, pix_idx] = flux_i
+    m[1, pix_idx] = flux_q
+    m[2, pix_idx] = flux_u
+    sm = hp.smoothing(m, fwhm=np.deg2rad(beam) / 60)
+    return sm

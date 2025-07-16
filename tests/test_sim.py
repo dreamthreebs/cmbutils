@@ -2,7 +2,7 @@ import numpy as np
 import healpy as hp
 import matplotlib.pyplot as plt
 
-from cmbutils.sim import gen_noise, gen_cmb
+from cmbutils.sim import gen_noise, gen_cmb, gen_test_ps
 
 
 def test_gen_noise(plot_flag=False):
@@ -26,6 +26,17 @@ def test_gen_cmb(plot_flag=False):
         plt.show()
 
 
+def test_gen_test_ps(plot_flag=False):
+    m_ps = gen_test_ps(nside=1024, lon=0, lat=0)
+
+    if plot_flag:
+        hp.gnomview(m_ps[0], title="T")
+        hp.gnomview(m_ps[1], title="Q")
+        hp.gnomview(m_ps[2], title="U")
+        plt.show()
+
+
 if __name__ == "__main__":
     test_gen_noise(plot_flag=True)
     test_gen_cmb(plot_flag=True)
+    test_gen_test_ps(plot_flag=True)
