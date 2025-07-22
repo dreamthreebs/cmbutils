@@ -107,10 +107,14 @@ class MatchedFilter:
         # plt.show()
         return obs_out, tot_out, snr, sigma, self.wl
 
-    def run_mf(self, m_obs, m_tot):
+    def run_mf(self, m_obs, m_tot, overwrite_wl=True):
+        if overwrite_wl:
+            self.calc_wl(normalize=True)
+
         file_wl = Path(f"./mf_data/normalized_wl_{self.name}.npy")
         if file_wl.exists():
             self.wl = np.load(file_wl)
+
         if not hasattr(self, "wl"):
             self.calc_wl(normalize=True)
 

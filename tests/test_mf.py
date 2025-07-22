@@ -73,6 +73,39 @@ def mf_mean_value():
     print(f"{m_ps[0, pix_idx]=}")
 
 
+def mf_Q_theta(plot_flag=False):
+    """
+    test if I use different beam to fit, how the Q changes
+    results: seems the Q theta varies intensely, maybe coming from the gaussian profile, so it is not similar with Q theta in SZ profile
+    """
+    nside = 1024
+    beam = 9  # arcmin
+    lmax = 3 * nside - 1
+    cls = np.load("../data/cmbcl_8k.npy").T
+    m_cmb = gen_cmb(nside=nside, cls=cls, beamFwhmArcmin=beam, seed=3)
+    m_ps = gen_test_ps(nside=nside, lon=0, lat=0, beam=beam)
+    m = m_cmb + m_ps
+
+    pix_idx = hp.ang2pix(nside=nside, theta=0, phi=0, lonlat=True)
+
+    if plot_flag:
+        hp.gnomview(m[0], reso=1, xsize=100, title="m obs")
+        hp.gnomview(m_ps[0], reso=1, xsize=100, title="m_ps")
+        plt.show()
+
+    print(f"{np.max(m)=}")
+    print(f"{np.max(m_ps)=}")
+
+    cl_tot = hp.anafast(m_cmb, lmax=lmax)[0]
+    bl = hp.gauss_beam(fwhm=np.deg2rad(9) / 60, lmax=lmax)
+
+    obj_mf = MatchedFilter(nside=nside, lmax=lmax, cl_tot=cl_tot, beam=7)
+    obs_out, tot_out, snr, sigma, wl = obj_mf.run_mf(m[0].copy(), m_tot=m_cmb[0].copy())
+
+    print(f"{obs_out[pix_idx]=}")
+
+
 if __name__ == "__main__":
-    test_mf(plot_flag=True)
-    mf_mean_value()
+    # test_mf(plot_flag=True)
+    # mf_mean_value()
+    mf_Q_theta(plot_flag=True)
