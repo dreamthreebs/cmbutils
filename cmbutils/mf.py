@@ -10,7 +10,9 @@ class MatchedFilter:
     1. Calculate wl. Then check it or not
     """
 
-    def __init__(self, nside, lmax, beam, cl_tot, pol=False, name="default"):
+    def __init__(
+        self, nside, lmax, beam, cl_tot, pol=False, name="default", beam_window=None
+    ):
         self.nside = nside
         self.lmax = lmax
         self.beam = beam  # in arcmin
@@ -27,6 +29,10 @@ class MatchedFilter:
             ]
         else:
             self.bl = hp.gauss_beam(fwhm=np.deg2rad(beam) / 60, lmax=lmax)
+
+        # add custum fl if needed eg: sz profile or pixel window function
+        if beam_window is not None:
+            self.bl = self.bl * beam_window[: lmax + 1]
 
         self.cl_tot = cl_tot[
             : lmax + 1

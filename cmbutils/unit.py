@@ -1,4 +1,5 @@
 import numpy as np
+from astropy import units as u
 
 
 def mJysr_to_uKCMB(intensity_mJy, frequency_GHz):
@@ -20,3 +21,36 @@ def mJysr_to_uKCMB(intensity_mJy, frequency_GHz):
     )  # Convert to uK_CMB, taking the inverse of dB/dT
     return uK_CMB
 
+
+def mapdepth2sigma(delta, nside):
+    Delta = delta * u.uK * u.arcmin
+    # Calculate pixel area in steradian
+    pixel_area_sr = 4 * np.pi / (12 * nside**2) * u.sr
+
+    # Convert pixel area to arcmin^2
+    pixel_area_arcmin2 = pixel_area_sr.to(u.arcmin**2)
+
+    # Calculate sigma
+    sigma = Delta / np.sqrt(pixel_area_arcmin2)
+
+    return sigma
+
+
+def uKpix2uKamin(n: float, npix: int) -> float:
+    """
+    Convert noise level from μK/pixel to μK/arcmin.
+
+    Parameters
+    ----------
+    n : float
+        Noise per pixel, in μK/pixel.
+    npix : int
+        Total number of pixels in the full sky map.
+
+    Returns
+    -------
+    float
+        Noise level in μK/arcmin.
+    """
+    factor = np.sqrt((360 * 60) ** 2 / (np.pi * npix))
+    return n * factor

@@ -106,6 +106,6 @@ def mf_Q_theta(plot_flag=False):
 
 
 if __name__ == "__main__":
-    # test_mf(plot_flag=True)
+    test_mf(plot_flag=True)
     # mf_mean_value()
-    mf_Q_theta(plot_flag=True)
+    # mf_Q_theta(plot_flag=True)
