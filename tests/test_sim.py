@@ -2,7 +2,7 @@ import numpy as np
 import healpy as hp
 import matplotlib.pyplot as plt
 
-from cmbutils.sim import gen_noise, gen_cmb, gen_test_ps
+from cmbutils.sim import gen_noise, gen_cmb, gen_test_ps, gen_test_tsz
 
 
 def test_gen_noise(plot_flag=False):
@@ -36,7 +36,17 @@ def test_gen_test_ps(plot_flag=False):
         plt.show()
 
 
+def _test_gen_test_tsz(plot_flag=False):
+    nside = 2048
+    m_tsz = gen_test_tsz(nside=nside, fwhm=1.0, theta_ac=2.0, beta=2 / 3)
+
+    if plot_flag:
+        hp.gnomview(m_tsz, title="tSZ")
+        plt.show()
+
+
 if __name__ == "__main__":
     test_gen_noise(plot_flag=True)
     test_gen_cmb(plot_flag=True)
     test_gen_test_ps(plot_flag=True)
+    _test_gen_test_tsz(plot_flag=True)

@@ -102,3 +102,66 @@ def gen_test_ps(nside, lon, lat, flux_i=1000, flux_q=1000, flux_u=1000, beam=9):
     m[2, pix_idx] = flux_u
     sm = hp.smoothing(m, fwhm=np.deg2rad(beam) / 60)
     return sm
+
+
+def beam_model(norm_beam, theta, FWHM):
+    """
+    Gaussian beam model.
+    FWHM in arcmin
+    """
+    sigma = np.deg2rad(FWHM) / 60 / (np.sqrt(8 * np.log(2)))
+    return norm_beam / (2 * np.pi * sigma**2) * np.exp(-((theta) ** 2) / (2 * sigma**2))
+
+
+def beta_model(norm_beam, theta, theta_c, beta):
+    """
+    Beta model profile for the tSZ effect.
+    theta_c in arcmin
+    """
+    temp = (1 + theta**2 / np.deg2rad(theta_c / 60) ** 2) ** (-(3 * beta - 1) / 2)
+    return norm_beam * temp
+
+
+def beam2bl(lmax, fwhm):
+    """
+    Convert beam(theta) to b(l).
+    fwhm in arcmin
+    """
+    # fwhm = np.deg2rad(fwhm/60)  # arcmin
+    # sigma = fwhm / (np.sqrt(8 * np.log(2)))
+    theta = np.linspace(0, 2 * fwhm, 30000)
+    btheta = beam_model(1, theta, fwhm)
+    b_ell = hp.beam2bl(btheta, theta, lmax=lmax)
+    b_ell /= b_ell[0]  # normalize
+    return b_ell
+
+
+def beta2bl(lmax, theta_ac, beta=1.0):
+    """
+    Convert Compton-y(theta) to b(l).
+    fwhm in arcmin
+    """
+    # theta_ac = np.deg2rad(theta_ac/60)  # arcmin
+    theta = np.linspace(0, 2 * theta_ac, 30000)
+    btheta = beta_model(1, theta, theta_ac, beta=beta)
+    b_ell = hp.beam2bl(btheta, theta, lmax=lmax)
+    b_ell /= b_ell[0]  # normalize
+    return b_ell
+
+
+def gen_test_tsz(nside, fwhm, theta_ac=1, beta=2 / 3):
+    lmax = 3 * nside - 1
+    npix = hp.nside2npix(nside=nside)
+    m = np.zeros(shape=npix)
+    ctr_val = 1
+    ctr_pix = hp.ang2pix(nside=nside, theta=0, phi=0, lonlat=True)
+    m[ctr_pix] = ctr_val
+
+    bl_sz = beta2bl(lmax=lmax, theta_ac=theta_ac, beta=beta)
+    bl_beam = beam2bl(lmax=lmax, fwhm=fwhm)
+    m_sz = hp.smoothing(m, beam_window=bl_sz * bl_beam)
+    m_sz = m_sz / np.max(m_sz)
+    # hp.gnomview(m_sz)
+    # plt.show()
+
+    return m_sz
