@@ -122,27 +122,27 @@ def beta_model(norm_beam, theta, theta_c, beta):
     return norm_beam * temp
 
 
-def beam2bl(lmax, fwhm):
+def beam2bl(lmax, fwhm, factor=2):
     """
     Convert beam(theta) to b(l).
     fwhm in arcmin
     """
     # fwhm = np.deg2rad(fwhm/60)  # arcmin
     # sigma = fwhm / (np.sqrt(8 * np.log(2)))
-    theta = np.linspace(0, 2 * fwhm, 30000)
+    theta = np.linspace(0, factor * np.deg2rad(fwhm) / 60, 30000)
     btheta = beam_model(1, theta, fwhm)
     b_ell = hp.beam2bl(btheta, theta, lmax=lmax)
     b_ell /= b_ell[0]  # normalize
     return b_ell
 
 
-def beta2bl(lmax, theta_ac, beta=1.0):
+def beta2bl(lmax, theta_ac, beta=1.0, factor=2):
     """
     Convert Compton-y(theta) to b(l).
     fwhm in arcmin
     """
     # theta_ac = np.deg2rad(theta_ac/60)  # arcmin
-    theta = np.linspace(0, 2 * theta_ac, 30000)
+    theta = np.linspace(0, factor * np.deg2rad(theta_ac) / 60, 30000)
     btheta = beta_model(1, theta, theta_ac, beta=beta)
     b_ell = hp.beam2bl(btheta, theta, lmax=lmax)
     b_ell /= b_ell[0]  # normalize
@@ -159,7 +159,7 @@ def gen_test_tsz(nside, fwhm, theta_ac=1, beta=2 / 3):
 
     bl_sz = beta2bl(lmax=lmax, theta_ac=theta_ac, beta=beta)
     bl_beam = beam2bl(lmax=lmax, fwhm=fwhm)
-    m_sz = hp.smoothing(m, beam_window=bl_sz * bl_beam)
+    m_sz = hp.smoothing(m, beam_window=bl_sz * bl_beam, lmax=lmax)
     m_sz = m_sz / np.max(m_sz)
     # hp.gnomview(m_sz)
     # plt.show()

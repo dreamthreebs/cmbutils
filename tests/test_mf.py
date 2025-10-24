@@ -6,7 +6,7 @@ from cmbutils.sim import gen_cmb, gen_test_ps, gen_test_tsz, beta2bl
 from cmbutils.mf import MatchedFilter
 
 
-def test_mf_ps(plot_flag=False):
+def _test_mf_ps(plot_flag=False):
     nside = 1024
     beam = 9  # arcmin
     lmax = 3 * nside - 1
@@ -94,10 +94,15 @@ def mf_ps_Q_theta(plot_flag=False):
     nside = 1024
     beam = 9  # arcmin
     lmax = 3 * nside - 1
+    nstd = 5
+
     cls = np.load("../data/cmbcl_8k.npy").T
     m_cmb = gen_cmb(nside=nside, cls=cls, beamFwhmArcmin=beam, seed=3)
     m_ps = gen_test_ps(nside=nside, lon=0, lat=0, beam=beam)
-    m = m_cmb + m_ps
+    m_noise = nstd * np.random.normal(
+        loc=0, scale=1, size=(3, hp.nside2npix(nside=nside))
+    )
+    m = m_cmb + m_ps + m_noise
 
     pix_idx = hp.ang2pix(nside=nside, theta=0, phi=0, lonlat=True)
 
@@ -109,28 +114,42 @@ def mf_ps_Q_theta(plot_flag=False):
     print(f"{np.max(m)=}")
     print(f"{np.max(m_ps)=}")
 
-    cl_tot = hp.anafast(m_cmb, lmax=lmax)[0]
+    cl_tot = hp.anafast(m_cmb + m_noise, lmax=lmax)[0]
     bl = hp.gauss_beam(fwhm=np.deg2rad(9) / 60, lmax=lmax)
 
-    obj_mf = MatchedFilter(nside=nside, lmax=lmax, cl_tot=cl_tot, beam=7)
-    obs_out, tot_out, snr, sigma, wl = obj_mf.run_mf(m[0].copy(), m_tot=m_cmb[0].copy())
+    obs_list = []
+    for beam in [3, 5, 7, 9, 11, 13, 15, 17, 19, 21]:
+        obj_mf = MatchedFilter(nside=nside, lmax=lmax, cl_tot=cl_tot, beam=beam)
+        obs_out, tot_out, snr, sigma, wl = obj_mf.run_mf(
+            m_ps[0].copy(), m_tot=m_cmb[0].copy() + m_noise[0].copy(), normalize=False
+        )
 
-    print(f"{obs_out[pix_idx]=}")
+        if plot_flag:
+            hp.gnomview(obs_out, reso=1, xsize=100, title="m obs")
+            hp.gnomview(snr, reso=1, xsize=100, title="m_snr")
+            plt.show()
+
+        print(f"{beam=}, {obs_out[pix_idx] / beam**2=}")
+        obs_list.append(obs_out[pix_idx] / beam**2)
+
+    np.save("./mf_data/obs_arr.npy", np.array(obs_list))
+    # np.save("./mf_data/tsz_arr", np.array(obs_list))
 
 
 def _test_mf_tsz(plot_flag=False):
     nside = 2048
-    beam = 1.0  # arcmin
+    beam = 1.4  # arcmin
     lmax = 3 * nside - 1
-    nstd = 1
-    theta_ac = 5.9
-    beta = 2 / 3
+    nstd = 50
+    theta_ac = 0.8
+    beta = 1.0
 
     cls = np.load("../data/cmbcl_8k.npy").T
     m_cmb = gen_cmb(nside=nside, cls=cls, beamFwhmArcmin=beam, seed=2)[0].copy()
-    m_tsz = -100 * gen_test_tsz(nside=nside, fwhm=beam, theta_ac=theta_ac, beta=beta)
+    m_tsz = -500 * gen_test_tsz(nside=nside, fwhm=beam, theta_ac=theta_ac, beta=beta)
     m_noise = nstd * np.random.normal(loc=0, scale=1, size=hp.nside2npix(nside=nside))
     m = m_cmb + m_tsz + m_noise
+    # m = m * -1.0
 
     if plot_flag:
         hp.gnomview(m, reso=1, xsize=100, title="m obs")
@@ -171,17 +190,17 @@ def _test_mf_tsz(plot_flag=False):
 
 def mf_tzs_Q_theta(plot_flag=False):
     nside = 2048
-    beam = 1.0  # arcmin
+    beam = 1.4  # arcmin
     # lmax = 3 * nside - 1
     lmax = 2 * nside
-    nstd = 1
-    theta_ac = 5.9
-    beta = 2 / 3
+    nstd = 50
+    theta_ac = 1.5
+    beta = 1.2
 
     pix_idx = hp.ang2pix(nside=nside, theta=0, phi=0, lonlat=True)
     cls = np.load("../data/cmbcl_8k.npy").T
     m_cmb = gen_cmb(nside=nside, cls=cls, beamFwhmArcmin=beam, seed=2)[0].copy()
-    m_tsz = -100 * gen_test_tsz(nside=nside, fwhm=beam, theta_ac=theta_ac, beta=beta)
+    m_tsz = -400 * gen_test_tsz(nside=nside, fwhm=beam, theta_ac=theta_ac, beta=beta)
     m_noise = nstd * np.random.normal(loc=0, scale=1, size=hp.nside2npix(nside=nside))
     m = m_cmb + m_tsz + m_noise
 
@@ -196,7 +215,7 @@ def mf_tzs_Q_theta(plot_flag=False):
     ell = np.arange(len(cl_tot))
 
     obs_list = []
-    for theta_ac in np.arange(0.2, 15.01, 0.5):
+    for theta_ac in np.arange(0.1, 3, 0.4):
         bl_beta = beta2bl(lmax=lmax, theta_ac=theta_ac, beta=beta)
         obj_mf = MatchedFilter(
             nside=nside, lmax=lmax, cl_tot=cl_tot, beam=beam, beam_window=bl_beta
@@ -204,17 +223,22 @@ def mf_tzs_Q_theta(plot_flag=False):
         obs_out, tot_out, snr, sigma, wl = obj_mf.run_mf(
             m_tsz.copy(), m_tot=m_cmb + m_noise
         )
-        print(f"{obs_out[pix_idx]=}")
-        obs_list.append(obs_out[pix_idx])
 
-    # np.save("./mf_data/obs_arr.npy", np.array(obs_list))
-    np.save("./mf_data/tsz_arr_2nside.npy", np.array(obs_list))
+        hp.gnomview(obs_out, title="obs_out")
+        hp.gnomview(snr, title="snr")
+        plt.show()
+
+        print(f"{theta_ac=}, {-obs_out[pix_idx]=}")
+        obs_list.append(-obs_out[pix_idx])
+
+    np.save("./mf_data/obs_arr.npy", np.array(obs_list))
+    # np.save("./mf_data/tsz_arr", np.array(obs_list))
 
 
 def plot_tsz_q_theta():
-    theta = np.arange(0.2, 15.01, 0.5)
-    Q_theta = np.load("./mf_data/tsz_arr.npy")
-    plt.plot(theta, Q_theta / -100)
+    theta = np.arange(0.1, 3, 0.4)
+    Q_theta = np.load("./mf_data/obs_arr.npy")
+    plt.plot(theta, Q_theta)
     plt.xlabel("theta")
     plt.ylabel("Q_theta")
     plt.show()
@@ -223,7 +247,7 @@ def plot_tsz_q_theta():
 if __name__ == "__main__":
     # test_mf_ps(plot_flag=True)
     # mf_ps_mean_value()
-    # mf_ps_Q_theta(plot_flag=True)
+    mf_ps_Q_theta(plot_flag=False)
     # _test_mf_tsz(plot_flag=True)
     # mf_tzs_Q_theta(plot_flag=True)
-    plot_tsz_q_theta()
+    # plot_tsz_q_theta()

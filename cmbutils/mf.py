@@ -56,24 +56,25 @@ class MatchedFilter:
             flux_I = 1000
             delta_m[ipix_ctr] = flux_I
 
-            sm_m = hp.smoothing(delta_m, beam_window=self.bl, pol=False)
-            ps_max = np.max(sm_m)
+            sm_m = hp.smoothing(delta_m, beam_window=self.bl, pol=False, lmax=self.lmax)
+            ps_max = sm_m[ipix_ctr]
 
-            ps_out = hp.smoothing(sm_m, beam_window=self.wl, pol=False)
-            ps_out_max = np.max(ps_out)
+            ps_out = hp.smoothing(sm_m, beam_window=self.wl, pol=False, lmax=self.lmax)
+            ps_out_max = ps_out[ipix_ctr]
 
             self.wl = self.wl * ps_max / ps_out_max
 
             print(f"normalized")
-            path_wl = Path(f"./mf_data")
-            path_wl.mkdir(exist_ok=True, parents=True)
-            np.save(path_wl / Path(f"normalized_wl_{self.name}.npy"), self.wl)
 
-            # ps_after_norm = hp.smoothing(sm_m, beam_window=self.wl, pol=False)
-            # hp.gnomview(sm_m, title='ps input')
-            # hp.gnomview(ps_out, title='ps output')
-            # hp.gnomview(ps_after_norm, title='ps_after_norm')
-            # plt.show()
+        path_wl = Path(f"./mf_data")
+        path_wl.mkdir(exist_ok=True, parents=True)
+        np.save(path_wl / Path(f"normalized_wl_{self.name}.npy"), self.wl)
+
+        # ps_after_norm = hp.smoothing(sm_m, beam_window=self.wl, pol=False)
+        # hp.gnomview(sm_m, title='ps input')
+        # hp.gnomview(ps_out, title='ps output')
+        # hp.gnomview(ps_after_norm, title='ps_after_norm')
+        # plt.show()
 
         return self.wl
 
@@ -86,46 +87,19 @@ class MatchedFilter:
         plt.legend()
         plt.show()
 
-    def test_run_mf(self, m_obs, m_tot):
-        file_wl = Path(f"./mf_data/normalized_wl_{self.name}.npy")
-        if file_wl.exists():
-            self.wl = np.load(file_wl)
-        if not hasattr(self, "wl"):
-            self.calc_wl(normalize=True)
-
-        obs_out = hp.smoothing(m_obs, beam_window=self.wl, pol=False)
-        tot_out = hp.smoothing(m_tot, beam_window=self.wl, pol=False)
-
-        sigma = np.std(tot_out)
-        snr = obs_out / sigma
-
-        print(f"{sigma=}")
-
-        # ps = np.load('./data/ps_map.npy')
-        # hp.gnomview(ps, title='ps')
-        # hp.gnomview(m_obs, title='input observation')
-        # hp.gnomview(m_tot, title='input total')
-        # hp.gnomview(obs_out, title='filtered observation')
-        # hp.gnomview(tot_out, title='filtered total')
-        # hp.gnomview(snr, title='snr')
-        # snr[snr<5] = 0
-        # hp.gnomview(snr, title='snr > 5')
-        # plt.show()
-        return obs_out, tot_out, snr, sigma, self.wl
-
-    def run_mf(self, m_obs, m_tot, overwrite_wl=True):
+    def run_mf(self, m_obs, m_tot, overwrite_wl=True, normalize=True):
         if overwrite_wl:
-            self.calc_wl(normalize=True)
+            self.calc_wl(normalize)
 
         file_wl = Path(f"./mf_data/normalized_wl_{self.name}.npy")
         if file_wl.exists():
             self.wl = np.load(file_wl)
 
         if not hasattr(self, "wl"):
-            self.calc_wl(normalize=True)
+            self.calc_wl(normalize)
 
-        obs_out = hp.smoothing(m_obs, beam_window=self.wl, pol=False)
-        tot_out = hp.smoothing(m_tot, beam_window=self.wl, pol=False)
+        obs_out = hp.smoothing(m_obs, beam_window=self.wl, pol=False, lmax=self.lmax)
+        tot_out = hp.smoothing(m_tot, beam_window=self.wl, pol=False, lmax=self.lmax)
 
         sigma = np.std(tot_out)
         snr = obs_out / sigma
