@@ -23,7 +23,6 @@ def mJysr_to_uKCMB(intensity_mJy, frequency_GHz):
     return uK_CMB
 
 
-
 def mapdepth2sigma(delta: float, nside: int = None, pixel_size: float = None) -> float:
     """
     Convert map depth (μK·arcmin) to per-pixel noise σ (μK),
@@ -59,26 +58,9 @@ def mapdepth2sigma(delta: float, nside: int = None, pixel_size: float = None) ->
     return sigma.value
 
 
-def uKpix2uKamin(n: float, npix: int) -> float:
-    """
-    Convert noise level from μK/pixel to μK/arcmin.
-
-    Parameters
-    ----------
-    n : float
-        Noise per pixel, in μK/pixel.
-    npix : int
-        Total number of pixels in the full sky map.
-
-    Returns
-    -------
-    float
-        Noise level in μK/arcmin.
-    """
-    factor = np.sqrt((360 * 60) ** 2 / (np.pi * npix))
-    return n * factor
-
-def uKpix2uKamin(sigma_pix: float, nside: int = None, pixel_size: float = None) -> float:
+def uKpix2uKamin(
+    sigma_pix: float, nside: int = None, pixel_size: float = None
+) -> float:
     """
     Convert noise level from μK/pixel to μK·arcmin.
     (Inverse of mapdepth2sigma)
@@ -104,7 +86,7 @@ def uKpix2uKamin(sigma_pix: float, nside: int = None, pixel_size: float = None) 
         pixel_area_sr = hp.nside2pixarea(nside) * u.sr
         pixel_area_arcmin2 = pixel_area_sr.to(u.arcmin**2)
     elif pixel_size is not None:
-        pixel_area_arcmin2 = (pixel_size * u.arcmin)**2
+        pixel_area_arcmin2 = (pixel_size * u.arcmin) ** 2
     else:
         raise ValueError("Either nside or pixel_size must be provided.")
 

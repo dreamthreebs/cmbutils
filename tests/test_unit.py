@@ -16,7 +16,7 @@ def test_mapdepth2sigma():
     print(f"nside = 350, {nstd=}")
 
     nstd = mapdepth2sigma(delta=mapdepth, pixel_size=10)
-    print(f"pixel_size = 10, {nstd=}")
+    print(f"pixel_size = 10 arcmin, {nstd=}")
 
 
 def test_uKpix2uKamin():
